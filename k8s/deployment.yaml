@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: valheim-server
+  name: valheim-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: valheim-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: valheim-server
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: nuc1
+      containers:
+        - env:
+            - name: "SAVE_DIR"
+              value: "/var/valheim-server"
+            - name: SERVER_NAME
+              value: "your server name"
+            - name: SERVER_PORT
+              value: "2456"
+            - name: SERVER_PASSWORD
+              value: 'yourPassword'
+            - name: SERVER_PUBLIC
+              value: "private-server"
+            - name: "WORLD_NAME"
+              value: "world name"
+          image: alexb138/valheim_server:0.146.11
+          args: ["/home/steam/valheim_launch.sh"]
+          imagePullPolicy: Always
+          name: valheim-server
+          ports:
+            - containerPort: 2456
+              name: valheim1
+              protocol: TCP
+            - containerPort: 2457
+              name: valheim2
+              protocol: TCP
+            - containerPort: 2458
+              name: valheim3
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/valheim-server
+              name: save-dir
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: save-dir
+          nfs:
+            path: /volume1/nuc/valheim-server
+            server: synology.local
